@@ -283,9 +283,55 @@ git push origin main
    - Point to staging branch
    - Use different environment variables if needed
 
-## Step 7: Production Optimizations
+## Step 7: Mobile Camera Troubleshooting
 
-### 7.1 Render Optimizations
+### 7.1 Common Camera Issues on Mobile
+
+**Camera not working on mobile devices:**
+
+1. **HTTPS Required**: Modern browsers require HTTPS for camera access
+   - ✅ Netlify provides HTTPS by default
+   - ✅ Make sure your custom domain has SSL enabled
+
+2. **Permissions**: Users must grant camera permission
+   - The app will show permission prompts
+   - Users can check browser settings if camera is blocked
+
+3. **Browser Compatibility**:
+   - Chrome/Safari: Full support
+   - Firefox Mobile: Good support
+   - Older browsers: Limited support
+
+4. **iOS Safari Specific**:
+   - Requires `playsinline` attribute (✅ implemented)
+   - May need user interaction to start camera
+
+### 7.2 Testing Camera on Mobile
+
+**Before deployment:**
+```bash
+# Test locally with HTTPS (required for camera)
+cd frontend
+npm run dev -- --host --https
+```
+
+**After deployment:**
+1. Test on actual mobile devices
+2. Check browser console for errors
+3. Verify HTTPS is working
+4. Test camera switching (front/back)
+
+### 7.3 Camera Fallback Options
+
+The app includes multiple fallback strategies:
+- Progressive constraint relaxation
+- Detailed error messages
+- Manual retry options
+- File upload alternative
+
+## Step 8: Production Optimizations
+
+### 8.1 Render Optimizations
 
 1. **Enable Health Checks:**
    - Add to your Express app:

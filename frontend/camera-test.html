@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Test - Plant Identification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        video {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 8px;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .error {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #d1fae5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .info {
+            background: #dbeafe;
+            border: 1px solid #93c5fd;
+            color: #1e40af;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📷 Camera Test</h1>
+        <p>This page tests camera functionality for the Plant Identification app.</p>
+        
+        <div class="info">
+            <strong>Current Status:</strong>
+            <br>• Protocol: <span id="protocol"></span>
+            <br>• Secure Context: <span id="secureContext"></span>
+            <br>• User Agent: <span id="userAgent"></span>
+            <br>• Media Devices Supported: <span id="mediaSupport"></span>
+        </div>
+
+        <div id="errorContainer"></div>
+        <div id="successContainer"></div>
+
+        <video id="video" autoplay playsinline muted style="display: none;"></video>
+        <canvas id="canvas" style="display: none;"></canvas>
+        <img id="capturedImage" style="max-width: 100%; display: none;" />
+
+        <div>
+            <button id="startCamera">Start Camera</button>
+            <button id="switchCamera" disabled>Switch Camera</button>
+            <button id="capturePhoto" disabled>Capture Photo</button>
+            <button id="stopCamera" disabled>Stop Camera</button>
+        </div>
+
+        <div id="deviceInfo" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        // DOM elements
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const capturedImage = document.getElementById('capturedImage');
+        const startBtn = document.getElementById('startCamera');
+        const switchBtn = document.getElementById('switchCamera');
+        const captureBtn = document.getElementById('capturePhoto');
+        const stopBtn = document.getElementById('stopCamera');
+        const errorContainer = document.getElementById('errorContainer');
+        const successContainer = document.getElementById('successContainer');
+
+        // State
+        let currentStream = null;
+        let facingMode = 'environment'; // Start with back camera
+
+        // Display device info
+        function displayDeviceInfo() {
+            document.getElementById('protocol').textContent = window.location.protocol;
+            document.getElementById('secureContext').textContent = window.isSecureContext ? 'Yes' : 'No';
+            document.getElementById('userAgent').textContent = navigator.userAgent.substring(0, 80) + '...';
+            document.getElementById('mediaSupport').textContent = 
+                (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) ? 'Yes' : 'No';
+
+            const deviceInfo = {
+                isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+                isIOS: /iPad|iPhone|iPod/.test(navigator.userAgent),
+                isAndroid: /Android/.test(navigator.userAgent),
+                supportedConstraints: navigator.mediaDevices ? 
+                    Object.keys(navigator.mediaDevices.getSupportedConstraints ? navigator.mediaDevices.getSupportedConstraints() : {}) : []
+            };
+
+            document.getElementById('deviceInfo').innerHTML = `
+                <h3>Device Information</h3>
+                <pre>${JSON.stringify(deviceInfo, null, 2)}</pre>
+            `;
+        }
+
+        // Show error message
+        function showError(message) {
+            errorContainer.innerHTML = `<div class="error">${message}</div>`;
+            successContainer.innerHTML = '';
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            successContainer.innerHTML = `<div class="success">${message}</div>`;
+            errorContainer.innerHTML = '';
+        }
+
+        // Start camera
+        async function startCamera() {
+            try {
+                errorContainer.innerHTML = '';
+
+                // Check prerequisites
+                if (!window.isSecureContext && window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+                    throw new Error('Camera requires HTTPS connection');
+                }
+
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('getUserMedia is not supported');
+                }
+
+                // Enhanced constraints
+                const constraints = {
+                    video: {
+                        facingMode: { ideal: facingMode },
+                        width: { min: 640, ideal: 1280, max: 1920 },
+                        height: { min: 480, ideal: 720, max: 1080 }
+                    }
+                };
+
+                console.log('Requesting camera with constraints:', constraints);
+
+                // Try to get camera stream
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                video.srcObject = currentStream;
+                video.style.display = 'block';
+                
+                await video.play();
+
+                // Update button states
+                startBtn.disabled = true;
+                switchBtn.disabled = false;
+                captureBtn.disabled = false;
+                stopBtn.disabled = false;
+
+                showSuccess(`Camera started successfully! Resolution: ${video.videoWidth}x${video.videoHeight}`);
+
+            } catch (error) {
+                console.error('Camera error:', error);
+                
+                let errorMessage = 'Camera Error: ';
+                
+                if (error.name === 'NotAllowedError') {
+                    errorMessage += 'Permission denied. Please allow camera access.';
+                } else if (error.name === 'NotFoundError') {
+                    errorMessage += 'No camera found on this device.';
+                } else if (error.name === 'NotSupportedError') {
+                    errorMessage += 'Camera not supported by browser.';
+                } else if (error.name === 'OverconstrainedError') {
+                    errorMessage += 'Camera constraints not supported.';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                showError(errorMessage);
+            }
+        }
+
+        // Switch camera
+        async function switchCamera() {
+            facingMode = facingMode === 'user' ? 'environment' : 'user';
+            await stopCamera();
+            setTimeout(startCamera, 500);
+        }
+
+        // Capture photo
+        function capturePhoto() {
+            if (!currentStream) return;
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0);
+            
+            // Show captured image
+            capturedImage.src = canvas.toDataURL('image/jpeg', 0.9);
+            capturedImage.style.display = 'block';
+            canvas.style.display = 'block';
+            
+            showSuccess('Photo captured successfully!');
+        }
+
+        // Stop camera
+        async function stopCamera() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => {
+                    track.stop();
+                    console.log('Stopped track:', track.kind);
+                });
+                currentStream = null;
+            }
+            
+            video.srcObject = null;
+            video.style.display = 'none';
+            
+            // Update button states
+            startBtn.disabled = false;
+            switchBtn.disabled = true;
+            captureBtn.disabled = true;
+            stopBtn.disabled = true;
+            
+            showSuccess('Camera stopped');
+        }
+
+        // Event listeners
+        startBtn.addEventListener('click', startCamera);
+        switchBtn.addEventListener('click', switchCamera);
+        captureBtn.addEventListener('click', capturePhoto);
+        stopBtn.addEventListener('click', stopCamera);
+
+        // Initialize
+        displayDeviceInfo();
+    </script>
+</body>
+</html> 
