@@ -1,0 +1,648 @@
+.identify-container {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.identify-content {
+  text-align: center;
+}
+
+.identify-content h1 {
+  font-size: 2.5rem;
+  color: var(--text-color);
+  margin-bottom: 1rem;
+}
+
+.subtitle {
+  color: var(--dark-gray);
+  margin-bottom: 2rem;
+}
+
+.upload-area {
+  border: 2px dashed var(--primary-color);
+  border-radius: 15px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  cursor: pointer;
+  transition: var(--transition);
+  background-color: var(--white);
+  position: relative;
+}
+
+.upload-area:hover {
+  border-color: var(--secondary-color);
+  background-color: rgba(46, 204, 113, 0.05);
+}
+
+/* Override for the new drag-drop only area */
+.input-options .upload-area {
+  border: 2px dashed #d1d5db;
+  background: #f9fafb;
+  cursor: default;
+  margin-bottom: 0;
+}
+
+.input-options .upload-area:hover {
+  border-color: var(--primary-color);
+  background: rgba(46, 204, 113, 0.02);
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.upload-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+.upload-hint {
+  font-size: 0.9rem;
+  color: var(--dark-gray);
+}
+
+.preview-container {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  margin: 2rem;
+  margin-bottom: 1rem;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 400px;
+  border-radius: 10px;
+  object-fit: contain;
+}
+
+.remove-image {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: var(--accent-color);
+  color: var(--white);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: var(--transition);
+}
+
+.remove-image:hover {
+  background-color: #c0392b;
+  transform: scale(1.1);
+}
+
+.identify-button {
+  background-color: var(--primary-color);
+  color: var(--white);
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  width: 100%;
+  max-width: 300px;
+  margin: 2rem;
+}
+
+.identify-button:hover:not(:disabled) {
+  background-color: var(--secondary-color);
+}
+
+.identify-button:disabled {
+  background-color: var(--dark-gray);
+  cursor: not-allowed;
+}
+
+.button-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--white);
+  animation: spin 1s linear infinite;
+}
+
+.error-message {
+  background-color: #fee2e2;
+  color: #dc2626;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.result-container {
+  margin-top: 2rem;
+  background-color: var(--white);
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: var(--shadow);
+  text-align: left;
+}
+
+.result-container h2 {
+  color: var(--text-color);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.plant-result {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 2;
+}
+
+.plant-result:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.plant-result h3 {
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+}
+
+.scientific-name {
+  color: var(--dark-gray);
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
+.confidence {
+  display: inline-block;
+  background-color: var(--light-gray);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.plant-details {
+  margin: 20px 0;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.plant-detail-section {
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.plant-detail-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.plant-detail-section h3 {
+  color: #2c3e50;
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.plant-detail-item {
+  display: flex;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #495057;
+  min-width: 200px;
+  padding-right: 15px;
+}
+
+.detail-value {
+  color: #212529;
+  flex: 1;
+}
+
+/* Add some spacing between sections */
+.plant-detail-section + .plant-detail-section {
+  margin-top: 20px;
+}
+
+/* Style for lists in detail values */
+.detail-value ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.detail-value li {
+  margin-bottom: 5px;
+}
+
+/* Style for scientific names */
+.scientific-name {
+  font-style: italic;
+  color: #6c757d;
+  margin: 5px 0 15px 0;
+}
+
+/* Style for confidence percentage */
+.confidence {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 8px 15px;
+  border-radius: 20px;
+  display: inline-block;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+/* Add some visual hierarchy */
+.plant-detail-section:nth-child(odd) {
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 6px;
+  margin: 0 -1.5rem 2rem -1.5rem;
+}
+
+.plant-detail-section:nth-child(odd) h3 {
+  color: #1a73e8;
+}
+
+/* Add hover effects for better interactivity */
+.plant-detail-item:hover {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 4px;
+  padding: 0.25rem;
+  margin: 0.25rem;
+}
+
+/* Style for boolean values */
+.detail-value:contains('Yes') {
+  color: #28a745;
+}
+
+.detail-value:contains('No') {
+  color: #dc3545;
+}
+
+/* Style for lists within detail values */
+.detail-value ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.detail-value li {
+  display: inline-block;
+  background: #e9ecef;
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  margin: 0.25rem;
+  font-size: 0.875rem;
+}
+
+/* Style for taxonomy entries */
+.plant-detail-section:contains('Taxonomy') .detail-value {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+/* Style for measurements */
+.detail-value:matches(/^[0-9.]+ (cm|m|ft|in)$/) {
+  font-weight: 500;
+  color: #1a73e8;
+}
+
+/* Style for conservation status */
+.plant-detail-section:contains('Conservation Status') .detail-value {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Style for endangered status */
+.plant-detail-section:contains('Endangered') .detail-value:contains('Yes') {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+/* Style for invasive status */
+.plant-detail-section:contains('Invasive') .detail-value:contains('Yes') {
+  color: #ffc107;
+  font-weight: 600;
+}
+
+/* Style for edible parts */
+.plant-detail-section:contains('Edible Parts') .detail-value {
+  color: #28a745;
+  font-weight: 500;
+}
+
+/* Style for poisonous warnings */
+.plant-detail-section:contains('Poisonous') .detail-value:contains('Yes') {
+  color: #dc3545;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Add icons for certain sections */
+.plant-detail-section h3::before {
+  margin-right: 0.5rem;
+  font-family: 'Material Icons';
+  font-size: 1.25rem;
+  vertical-align: middle;
+}
+
+.plant-detail-section:contains('Basic Information') h3::before {
+  content: 'info';
+}
+
+.plant-detail-section:contains('Taxonomy') h3::before {
+  content: 'category';
+}
+
+.plant-detail-section:contains('Characteristics') h3::before {
+  content: 'spa';
+}
+
+.plant-detail-section:contains('Leaves') h3::before {
+  content: 'eco';
+}
+
+.plant-detail-section:contains('Flowers & Fruits') h3::before {
+  content: 'local_florist';
+}
+
+.plant-detail-section:contains('Stem & Bark') h3::before {
+  content: 'park';
+}
+
+.plant-detail-section:contains('Care Requirements') h3::before {
+  content: 'yard';
+}
+
+.plant-detail-section:contains('Environmental Tolerance') h3::before {
+  content: 'wb_sunny';
+}
+
+.plant-detail-section:contains('Uses & Benefits') h3::before {
+  content: 'favorite';
+}
+
+.plant-detail-section:contains('Ecology & Conservation') h3::before {
+  content: 'nature';
+}
+
+.plant-detail-section:contains('Safety') h3::before {
+  content: 'warning';
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .identify-container {
+    padding: 1rem;
+  }
+
+  .identify-content h1 {
+    font-size: 2rem;
+  }
+
+  .upload-area {
+    padding: 1rem;
+  }
+
+  .preview-image {
+    max-height: 300px;
+  }
+
+  .result-container {
+    padding: 1rem;
+  }
+
+  .plant-details {
+    padding: 1rem;
+  }
+
+  .plant-detail-item {
+    flex-direction: column;
+  }
+
+  .detail-label {
+    flex: none;
+    margin-bottom: 0.25rem;
+  }
+
+  .detail-value {
+    flex: none;
+  }
+}
+
+/* New styles for camera and upload options */
+.input-options {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto 2rem;
+}
+
+.option-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.camera-option-button,
+.upload-option-button {
+  background: white;
+  border: 2px solid var(--primary-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+  min-height: 140px;
+  justify-content: center;
+}
+
+.camera-option-button:hover,
+.upload-option-button:hover {
+  background: rgba(46, 204, 113, 0.05);
+  border-color: var(--secondary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(46, 204, 113, 0.15);
+}
+
+.option-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.option-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 0.25rem;
+}
+
+.option-hint {
+  font-size: 0.9rem;
+  color: var(--dark-gray);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 1.5rem 0;
+  color: var(--dark-gray);
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.divider span {
+  padding: 0 1rem;
+  font-size: 0.9rem;
+  background: white;
+}
+
+.preview-section {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.change-image-options {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.change-image-button {
+  background: white;
+  border: 1px solid #d1d5db;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-color);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.change-image-button:hover {
+  background: #f3f4f6;
+  border-color: var(--primary-color);
+}
+
+/* Mobile responsive adjustments for new elements */
+@media (max-width: 768px) {
+  .option-buttons {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .camera-option-button,
+  .upload-option-button {
+    min-height: 120px;
+    padding: 1.25rem;
+  }
+
+  .option-icon {
+    font-size: 2rem;
+  }
+
+  .option-text {
+    font-size: 1rem;
+  }
+
+  .change-image-options {
+    flex-direction: column;
+  }
+
+  .change-image-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .upload-area {
+    padding: 1.5rem;
+  }
+}
+
+/* Ensure the map container is below other content */
+.distribution-map-container {
+  margin-top: 30px;
+  position: relative;
+  z-index: 1;
+}
+
+.loading-details {
+  padding: 15px;
+  margin: 20px 0;
+  background: #f8f9fa;
+  border-radius: 8px;
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  border: 1px dashed #dee2e6;
+}
+
+.loading-details::after {
+  content: '...';
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% { content: '.'; }
+  33% { content: '..'; }
+  66% { content: '...'; }
+  100% { content: '.'; }
+}
