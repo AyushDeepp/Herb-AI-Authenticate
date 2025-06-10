@@ -198,8 +198,10 @@ FRONTEND_URL=https://your-app-name.netlify.app
 2. Add the following variables:
 
 ```
-VITE_API_URL=https://your-backend-app.onrender.com
-VITE_OPENWEATHER_API_KEY=your_openweather_api_key
+VITE_BACKEND_URL=https://your-backend-app.onrender.com
+VITE_GEMINI_API_KEY=your_gemini_api_key
+VITE_PERPLEXITY_API_KEY=your_perplexity_api_key
+VITE_TREFLE_API_KEY=your_trefle_api_key
 ```
 
 **Replace** `your-backend-app` with your actual Render service name.
@@ -226,7 +228,7 @@ If you have a custom domain:
 
 2. **Update Environment Variables:**
    - Backend: Update `FRONTEND_URL` to your custom domain
-   - Frontend: Update `VITE_API_URL` if needed
+   - Frontend: Update `VITE_BACKEND_URL` if needed
 
 ## Step 5: Verification and Testing
 

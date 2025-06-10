@@ -104,7 +104,8 @@ const Identify = () => {
 
     try {
       console.log('Sending request to identify plant...');
-      const response = await axios.post('http://localhost:5000/api/plants/identify', 
+      const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+      const response = await axios.post(`${BACKEND_URL}/api/plants/identify`, 
         formData,
         {
           headers: {
@@ -150,7 +151,8 @@ const Identify = () => {
       // Primary: Fetch comprehensive data from our enhanced Gemini API
       try {
         console.log('Fetching comprehensive plant data from Gemini API...');
-        const geminiResponse = await axios.post('http://localhost:5000/api/plants/gemini', {
+        const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+        const geminiResponse = await axios.post(`${BACKEND_URL}/api/plants/gemini`, {
           scientificName: scientificName
         }, {
           headers: {

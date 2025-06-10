@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
 
   const loadUser = async (token) => {
     try {
-      const response = await axios.get('http://localhost:5000/api/auth/profile', {
+      const response = await axios.get('https://herb-ai-authenticate.onrender.com/api/auth/profile', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUser(response.data);
@@ -41,7 +41,8 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', {
+      const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+      const response = await axios.post(`${BACKEND_URL}/api/auth/login`, {
         email,
         password
       });
@@ -59,7 +60,8 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (username, email, password) => {
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', {
+      const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+      const response = await axios.post(`${BACKEND_URL}/api/auth/register`, {
         username,
         email,
         password
