@@ -44,9 +44,15 @@
   font-size: 24px;
   color: #6b7280;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
+  padding: 8px;
+  border-radius: 6px;
   transition: all 0.2s ease;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
 }
 
 .close-camera:hover {
@@ -61,6 +67,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .video-container {
@@ -70,13 +77,18 @@
   border-radius: 12px;
   overflow: hidden;
   background: #000;
+  aspect-ratio: 4/3;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .camera-video {
   width: 100%;
-  height: auto;
-  display: block;
-  background: #000;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
 }
 
 .camera-controls {
@@ -87,6 +99,7 @@
   display: flex;
   gap: 20px;
   align-items: center;
+  z-index: 10;
 }
 
 .capture-button {
@@ -102,15 +115,21 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  user-select: none;
 }
 
-.capture-button:hover {
+.capture-button:hover:not(:disabled) {
   background: #f3f4f6;
   transform: scale(1.05);
 }
 
-.capture-button:active {
+.capture-button:active:not(:disabled) {
   transform: scale(0.95);
+}
+
+.capture-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .switch-camera-button {
@@ -126,11 +145,17 @@
   align-items: center;
   justify-content: center;
   backdrop-filter: blur(8px);
+  user-select: none;
 }
 
-.switch-camera-button:hover {
+.switch-camera-button:hover:not(:disabled) {
   background: rgba(255, 255, 255, 1);
   transform: scale(1.05);
+}
+
+.switch-camera-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .captured-image-container {
@@ -145,12 +170,15 @@
   border-radius: 12px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
+  max-height: 400px;
+  object-fit: contain;
 }
 
 .capture-actions {
   display: flex;
   gap: 12px;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 .retake-button,
@@ -162,15 +190,16 @@
   transition: all 0.2s ease;
   font-size: 1rem;
   min-width: 120px;
+  border: 1px solid;
 }
 
 .retake-button {
   background: #f3f4f6;
   color: #374151;
-  border: 1px solid #d1d5db;
+  border-color: #d1d5db;
 }
 
-.retake-button:hover {
+.retake-button:hover:not(:disabled) {
   background: #e5e7eb;
   border-color: #9ca3af;
 }
@@ -178,10 +207,10 @@
 .use-photo-button {
   background: #2563eb;
   color: white;
-  border: 1px solid #2563eb;
+  border-color: #2563eb;
 }
 
-.use-photo-button:hover {
+.use-photo-button:hover:not(:disabled) {
   background: #1d4ed8;
   border-color: #1d4ed8;
 }
@@ -189,26 +218,29 @@
 .camera-error {
   text-align: center;
   padding: 40px 20px;
+  max-width: 400px;
 }
 
 .camera-error p {
   color: #dc2626;
   margin-bottom: 16px;
   font-size: 1rem;
+  font-weight: 500;
 }
 
 .error-details {
   background: #fef2f2;
   border: 1px solid #fecaca;
   border-radius: 6px;
-  padding: 8px 12px;
-  margin: 10px 0;
+  padding: 12px;
+  margin: 16px 0;
 }
 
 .error-details small {
   color: #991b1b;
   font-size: 0.875rem;
   line-height: 1.4;
+  display: block;
 }
 
 .retry-button {
@@ -220,15 +252,26 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  margin-top: 16px;
 }
 
-.retry-button:hover {
+.retry-button:hover:not(:disabled) {
   background: #1d4ed8;
+}
+
+.retry-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .camera-loading {
   text-align: center;
   padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
 }
 
 .camera-loading .spinner {
@@ -238,18 +281,57 @@
   border-top: 4px solid #2563eb;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto 16px;
+  margin-bottom: 16px;
 }
 
 .camera-loading p {
   color: #6b7280;
-  margin: 0;
+  margin: 0 0 8px 0;
   font-size: 1rem;
+  font-weight: 500;
+}
+
+.camera-loading small {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  margin: 0;
 }
 
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+.location-container {
+  margin-top: 16px;
+  width: 100%;
+  max-width: 500px;
+}
+
+.location-info,
+.location-error {
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-align: center;
+  margin: 4px 0;
+}
+
+.location-info {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0369a1;
+}
+
+.location-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.location-info small,
+.location-error small {
+  font-size: 0.8rem;
+  display: block;
 }
 
 .debug-info {
@@ -258,6 +340,8 @@
   background: #f8f9fa;
   border-radius: 6px;
   font-size: 0.8rem;
+  max-width: 500px;
+  width: 100%;
 }
 
 .debug-info details {
@@ -277,29 +361,10 @@
   overflow-x: auto;
   font-size: 0.75rem;
   border: 1px solid #e5e7eb;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
-.location-info,
-.location-error {
-  margin-top: 12px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  text-align: center;
-}
-
-.location-info {
-  background: #f0f9ff;
-  border: 1px solid #bae6fd;
-  color: #0369a1;
-}
-
-.location-error {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #991b1b;
-}
-
-/* Mobile Responsive */
 @media (max-width: 768px) {
   .camera-modal-overlay {
     padding: 10px;
@@ -314,9 +379,19 @@
     padding: 16px 20px;
   }
 
+  .camera-header h3 {
+    font-size: 1.1rem;
+  }
+
   .camera-container {
-    padding: 20px;
+    padding: 20px 16px;
     min-height: 350px;
+  }
+
+  .video-container {
+    max-width: 100%;
+    aspect-ratio: 4/3;
+    min-height: 250px;
   }
 
   .capture-button {
@@ -338,6 +413,7 @@
 
   .capture-actions {
     flex-direction: column;
+    gap: 8px;
   }
 
   .retake-button,
@@ -345,9 +421,17 @@
     width: 100%;
     min-width: auto;
   }
+
+  .camera-error {
+    padding: 30px 16px;
+  }
+
+  .camera-loading {
+    padding: 30px 16px;
+    min-height: 150px;
+  }
 }
 
-/* Landscape mobile adjustments */
 @media (max-height: 600px) and (orientation: landscape) {
   .camera-modal {
     max-height: 95vh;
@@ -358,7 +442,67 @@
     padding: 16px;
   }
 
+  .video-container {
+    min-height: 200px;
+  }
+
   .camera-controls {
     bottom: 10px;
+  }
+
+  .camera-loading {
+    min-height: 120px;
+    padding: 20px 16px;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .capture-button:hover {
+    transform: none;
+    background: #fff;
+  }
+
+  .switch-camera-button:hover {
+    transform: none;
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .capture-button:active {
+    transform: scale(0.95);
+  }
+
+  .switch-camera-button:active {
+    transform: scale(0.95);
+  }
+}
+
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
+  .camera-video {
+    image-rendering: -webkit-optimize-contrast;
+  }
+}
+
+.capture-button:focus,
+.switch-camera-button:focus,
+.close-camera:focus,
+.retry-button:focus,
+.retake-button:focus,
+.use-photo-button:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+  
+  .capture-button,
+  .switch-camera-button,
+  .close-camera,
+  .retry-button,
+  .retake-button,
+  .use-photo-button {
+    transition: none;
   }
 } 
