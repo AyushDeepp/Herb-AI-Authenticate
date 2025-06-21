@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+import html2pdf from 'html2pdf.js';
 import Camera from '../components/Camera';
 import PlantDistributionMap from '../components/PlantDistributionMap';
 import '../styles/Identify.css';
@@ -18,6 +19,8 @@ const Identify = () => {
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [locationData, setLocationData] = useState(null);
   const [climateData, setClimateData] = useState(null);
+  const [shareDropdownOpen, setShareDropdownOpen] = useState(false);
+  const plantDataRef = useRef(null);
 
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
@@ -330,22 +333,17 @@ const Identify = () => {
     }
   };
 
-  const renderPlantDetails = (details) => {
-    if (!details) return null;
+  // Share functions
+  const handleCopyToClipboard = async () => {
+    if (!result?.suggestions?.[0]) return;
 
-    console.log('Current location data:', locationData);
-    console.log('Current climate data:', climateData);
+    const plantData = result.suggestions[0];
+    const mergedDetails = { ...plantData.plant_details, ...additionalDetails };
 
-    const mergedDetails = {
-      ...details,
-      ...additionalDetails
-    };
-
-    // Add location and climate data to the details
+    // Add location and climate data
     if (locationData) {
       mergedDetails.location = `${locationData.latitude.toFixed(6)}, ${locationData.longitude.toFixed(6)}`;
     }
-
     if (climateData) {
       mergedDetails.climate = climateData.weather;
       mergedDetails.temperature = `${climateData.temperature}°C`;
@@ -355,24 +353,160 @@ const Identify = () => {
       mergedDetails.weather = climateData.description;
     }
 
-    const formatValue = (value) => {
-      if (!value) return 'Not available';
-              if (typeof value === 'object') {
-                if (Array.isArray(value)) {
-          return value.length > 0 ? value.join(', ') : 'Not available';
-                } else if (value.value) {
-          return value.value;
-                } else {
-          return Object.entries(value)
-            .filter(([k, v]) => v)
-            .map(([k, v]) => `${k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}: ${v}`)
-                    .join(', ');
-                }
-              }
-      return value;
+    let textData = `🌿 PLANT IDENTIFICATION REPORT 🌿\n\n`;
+    textData += `Plant Name: ${plantData.plant_name}\n`;
+    textData += `Scientific Name: ${plantData.scientific_name}\n`;
+    textData += `Confidence: ${Math.round(plantData.probability * 100)}%\n\n`;
+
+    // Add all available data
+    const sections = getPlantDataSections(mergedDetails);
+    sections.forEach(section => {
+      const sectionData = section.fields
+        .filter(field => field.value && field.value !== 'Not available' && field.value !== 'Unknown')
+        .map(field => `${field.label}: ${formatValue(field.value)}`)
+        .join('\n');
+      
+      if (sectionData) {
+        textData += `${section.title.toUpperCase()}\n`;
+        textData += `${sectionData}\n\n`;
+      }
+    });
+
+    textData += `Generated on: ${new Date().toLocaleString()}\n`;
+
+    try {
+      await navigator.clipboard.writeText(textData);
+      alert('Plant data copied to clipboard!');
+      setShareDropdownOpen(false);
+    } catch (err) {
+      console.error('Failed to copy to clipboard:', err);
+      alert('Failed to copy to clipboard. Please try again.');
+    }
+  };
+
+  const handleDownloadPDF = () => {
+    if (!result?.suggestions?.[0]) return;
+
+    const plantData = result.suggestions[0];
+    const mergedDetails = { ...plantData.plant_details, ...additionalDetails };
+
+    // Add location and climate data
+    if (locationData) {
+      mergedDetails.location = `${locationData.latitude.toFixed(6)}, ${locationData.longitude.toFixed(6)}`;
+    }
+    if (climateData) {
+      mergedDetails.climate = climateData.weather;
+      mergedDetails.temperature = `${climateData.temperature}°C`;
+      mergedDetails.humidity = `${climateData.humidity}%`;
+      mergedDetails.wind_speed = `${climateData.windSpeed} m/s`;
+      mergedDetails.pressure = `${climateData.pressure} hPa`;
+      mergedDetails.weather = climateData.description;
+    }
+
+    // Create a temporary element for PDF content
+    const pdfElement = document.createElement('div');
+    pdfElement.style.padding = '20px';
+    pdfElement.style.fontFamily = 'Arial, sans-serif';
+    pdfElement.style.lineHeight = '1.6';
+    pdfElement.style.color = '#333';
+    pdfElement.style.backgroundColor = 'white';
+
+    const sections = getPlantDataSections(mergedDetails);
+    
+    pdfElement.innerHTML = `
+      <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #2ecc71; padding-bottom: 20px;">
+        <h1 style="color: #2ecc71; font-size: 28px; margin: 0; font-weight: bold;">🌿 Plant Identification Report</h1>
+        <p style="color: #666; font-size: 14px; margin: 10px 0 0 0;">Generated on: ${new Date().toLocaleString()}</p>
+      </div>
+
+      <div style="margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 10px; border-left: 5px solid #2ecc71;">
+        <h2 style="color: #2ecc71; font-size: 24px; margin: 0 0 10px 0;">${plantData.plant_name}</h2>
+        <p style="font-style: italic; color: #666; font-size: 18px; margin: 0 0 15px 0;">${plantData.scientific_name}</p>
+        <div style="background: #e3f2fd; padding: 10px 15px; border-radius: 20px; display: inline-block;">
+          <strong style="color: #1976d2;">Confidence: ${Math.round(plantData.probability * 100)}%</strong>
+        </div>
+      </div>
+
+      ${sections.map(section => {
+        const sectionData = section.fields
+          .filter(field => field.value && field.value !== 'Not available' && field.value !== 'Unknown')
+          .map(field => `
+            <tr>
+              <td style="padding: 8px 12px; border-bottom: 1px solid #eee; font-weight: 600; color: #555; width: 40%;">${field.label}</td>
+              <td style="padding: 8px 12px; border-bottom: 1px solid #eee; color: #333;">${formatValue(field.value)}</td>
+            </tr>
+          `).join('');
+
+        if (!sectionData) return '';
+
+        return `
+          <div style="margin-bottom: 25px; page-break-inside: avoid;">
+            <h3 style="color: #2c3e50; font-size: 18px; margin: 0 0 15px 0; padding: 10px 0; border-bottom: 2px solid #ecf0f1;">
+              <span style="margin-right: 8px;">${section.icon}</span>${section.title}
+            </h3>
+            <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              ${sectionData}
+            </table>
+          </div>
+        `;
+      }).join('')}
+
+      <div style="margin-top: 40px; text-align: center; color: #888; font-size: 12px; border-top: 1px solid #ddd; padding-top: 20px;">
+        <p>This report was generated by Herb-AI Authenticate</p>
+        <p>For more information, visit our website</p>
+      </div>
+    `;
+
+    // Temporarily add to DOM
+    document.body.appendChild(pdfElement);
+
+    const options = {
+      margin: [0.5, 0.5, 0.5, 0.5],
+      filename: `plant-identification-${plantData.plant_name?.replace(/\s+/g, '-') || 'report'}.pdf`,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { 
+        scale: 2,
+        useCORS: true,
+        letterRendering: true
+      },
+      jsPDF: { 
+        unit: 'in', 
+        format: 'letter', 
+        orientation: 'portrait',
+        compress: true
+      }
     };
 
-    const sections = [
+    html2pdf().set(options).from(pdfElement).save().then(() => {
+      // Remove temporary element
+      document.body.removeChild(pdfElement);
+      setShareDropdownOpen(false);
+    }).catch(error => {
+      console.error('Error generating PDF:', error);
+      document.body.removeChild(pdfElement);
+      alert('Error generating PDF. Please try again.');
+    });
+  };
+
+  const formatValue = (value) => {
+    if (!value) return 'Not available';
+    if (typeof value === 'object') {
+      if (Array.isArray(value)) {
+        return value.length > 0 ? value.join(', ') : 'Not available';
+      } else if (value.value) {
+        return value.value;
+      } else {
+        return Object.entries(value)
+          .filter(([k, v]) => v)
+          .map(([k, v]) => `${k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}: ${v}`)
+          .join(', ');
+      }
+    }
+    return value;
+  };
+
+  const getPlantDataSections = (mergedDetails) => {
+    return [
       {
         title: 'Basic Information',
         icon: '🏷️',
@@ -576,38 +710,78 @@ const Identify = () => {
         ]
       }
     ];
+  };
 
-              return (
-      <div className="comprehensive-plant-details">
-        {sections.map((section) => {
-          const sectionContent = section.fields
-            .filter(field => field.value && field.value !== 'Not available' && field.value !== 'Unknown')
-            .map((field) => (
-              <div key={field.key} className="plant-detail-item">
-                <span className="detail-label">{field.label}:</span>
-                <span className="detail-value">{formatValue(field.value)}</span>
+  const renderPlantDetails = (details) => {
+    if (!details) return null;
+
+    console.log('Current location data:', locationData);
+    console.log('Current climate data:', climateData);
+
+    const mergedDetails = {
+      ...details,
+      ...additionalDetails
+    };
+
+    // Add location and climate data to the details
+    if (locationData) {
+      mergedDetails.location = `${locationData.latitude.toFixed(6)}, ${locationData.longitude.toFixed(6)}`;
+    }
+
+    if (climateData) {
+      mergedDetails.climate = climateData.weather;
+      mergedDetails.temperature = `${climateData.temperature}°C`;
+      mergedDetails.humidity = `${climateData.humidity}%`;
+      mergedDetails.wind_speed = `${climateData.windSpeed} m/s`;
+      mergedDetails.pressure = `${climateData.pressure} hPa`;
+      mergedDetails.weather = climateData.description;
+    }
+
+    const sections = getPlantDataSections(mergedDetails);
+
+    return (
+      <div className="modern-plant-details">
+        <div className="details-grid">
+          {sections.map((section) => {
+            const sectionContent = section.fields
+              .filter(field => field.value && field.value !== 'Not available' && field.value !== 'Unknown')
+              .map((field) => (
+                <div key={field.key} className="detail-row">
+                  <span className="detail-label">{field.label}</span>
+                  <span className="detail-value">{formatValue(field.value)}</span>
                 </div>
-            ));
+              ));
 
-          if (sectionContent.length === 0) return null;
+            if (sectionContent.length === 0) return null;
 
-          return (
-            <div key={section.title} className="plant-detail-section">
-              <h3 className="section-title">
-                <span className="section-icon">{section.icon}</span>
-                {section.title}
-              </h3>
-              <div className="section-content">
-              {sectionContent}
-              </div>
-            </div>
-          );
-        })}
+            return (
+              <motion.div 
+                key={section.title} 
+                className="detail-card"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="card-header">
+                  <span className="card-icon">{section.icon}</span>
+                  <h3 className="card-title">{section.title}</h3>
+                </div>
+                <div className="card-content">
+                  {sectionContent}
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
         {loadingDetails && (
-          <div className="loading-details">
-            <div className="spinner"></div>
+          <motion.div 
+            className="loading-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="loading-spinner"></div>
             <span>Loading additional botanical information...</span>
-          </div>
+          </motion.div>
         )}
       </div>
     );
@@ -633,79 +807,87 @@ const Identify = () => {
   };
 
   return (
-    <div className="identify-container">
+    <div className="modern-identify-container">
       <motion.div
         className="identify-content"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        <h1>Identify Your Plant</h1>
-        <p className="subtitle">Take a photo or upload an image of the plant you want to identify</p>
+        <div className="hero-section">
+          <h1 className="main-title">Plant Identification</h1>
+          <p className="subtitle">Discover nature's secrets with AI-powered plant recognition</p>
+        </div>
 
         {!previewUrl ? (
-          <div className="input-options">
-            <div className="option-buttons">
+          <div className="upload-section">
+            <div className="upload-options">
               <motion.button
-                className="camera-option-button"
+                className="option-card camera-option"
                 onClick={openCamera}
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <span className="option-icon">📷</span>
-                <span className="option-text">Take Photo</span>
-                <span className="option-hint">Use your camera</span>
+                <div className="option-icon">📷</div>
+                <h3>Take Photo</h3>
+                <p>Use your camera to capture the plant</p>
               </motion.button>
 
               <motion.button
-                className="upload-option-button"
+                className="option-card upload-option"
                 onClick={() => fileInputRef.current?.click()}
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <span className="option-icon">📁</span>
-                <span className="option-text">Upload Image</span>
-                <span className="option-hint">Choose from gallery</span>
+                <div className="option-icon">📁</div>
+                <h3>Upload Image</h3>
+                <p>Choose from your gallery</p>
               </motion.button>
             </div>
 
-            <div className="divider">
+            <div className="divider-line">
               <span>or</span>
             </div>
 
-            <div
-              className="upload-area"
+            <motion.div
+              className="drop-zone"
               onDragOver={handleDragOver}
               onDrop={handleDrop}
+              whileHover={{ scale: 1.01 }}
             >
-              <div className="upload-placeholder">
-                <div className="upload-icon">📸</div>
-                <p>Drag and drop an image here</p>
-                <span className="upload-hint">Maximum file size: 5MB • JPG, PNG, GIF</span>
+              <div className="drop-content">
+                <div className="drop-icon">📸</div>
+                <h3>Drag & Drop</h3>
+                <p>Drop your plant image here</p>
+                <span className="file-info">Max 5MB • JPG, PNG, GIF</span>
               </div>
-            </div>
+            </motion.div>
           </div>
         ) : (
           <div className="preview-section">
-            <div className="preview-container">
-              <img src={previewUrl} alt="Selected plant" className="preview-image" />
+            <motion.div 
+              className="image-preview"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              <img src={previewUrl} alt="Selected plant" className="preview-img" />
               <button
-                className="remove-image"
+                className="remove-btn"
                 onClick={() => {
                   setPreviewUrl(null);
                   setSelectedImage(null);
                   setResult(null);
                 }}
               >
-                ×
+                ✕
               </button>
-            </div>
+            </motion.div>
             
-            <div className="change-image-options">
-              <button className="change-image-button" onClick={openCamera}>
+            <div className="change-options">
+              <button className="change-btn" onClick={openCamera}>
                 📷 Take New Photo
               </button>
-              <button className="change-image-button" onClick={() => fileInputRef.current?.click()}>
+              <button className="change-btn" onClick={() => fileInputRef.current?.click()}>
                 📁 Choose Different Image
               </button>
             </div>
@@ -724,7 +906,7 @@ const Identify = () => {
         <AnimatePresence>
           {error && (
             <motion.div
-              className="error-message"
+              className="error-card"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
@@ -735,47 +917,94 @@ const Identify = () => {
         </AnimatePresence>
 
         <motion.button
-          className="identify-button"
+          className="identify-btn"
           onClick={handleSubmit}
           disabled={!selectedImage || isLoading}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
           {isLoading ? (
-            <div className="button-loader">
-              <div className="spinner"></div>
+            <div className="btn-loading">
+              <div className="btn-spinner"></div>
               <span>Identifying...</span>
             </div>
           ) : (
-            'Identify Plant'
+            <>
+              <span className="btn-icon">🔍</span>
+              <span>Identify Plant</span>
+            </>
           )}
         </motion.button>
 
         <AnimatePresence>
           {result && (
             <motion.div
-              className="result-container"
+              className="results-section"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
+              ref={plantDataRef}
             >
-              <h2>Identification Results</h2>
-              {result.suggestions && result.suggestions.length > 0 && (
-                <div className="plant-result">
-                  <h3>{result.suggestions[0].plant_name}</h3>
-                  <p className="scientific-name">{result.suggestions[0].scientific_name}</p>
-                  <div className="confidence">
-                    Confidence: {Math.round(result.suggestions[0].probability * 100)}%
+              <div className="results-header">
+                <div className="header-content">
+                  <h2>Identification Results</h2>
+                  <div className="share-section">
+                    <motion.button
+                      className="share-btn"
+                      onClick={() => setShareDropdownOpen(!shareDropdownOpen)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <span className="share-icon">📤</span>
+                      <span>Share</span>
+                    </motion.button>
+                    
+                    <AnimatePresence>
+                      {shareDropdownOpen && (
+                        <motion.div
+                          className="share-dropdown"
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                        >
+                          <button className="share-option" onClick={handleCopyToClipboard}>
+                            <span className="option-icon">📋</span>
+                            <span>Copy to Clipboard</span>
+                          </button>
+                          <button className="share-option" onClick={handleDownloadPDF}>
+                            <span className="option-icon">📄</span>
+                            <span>Download PDF</span>
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
+                </div>
+              </div>
+
+              {result.suggestions && result.suggestions.length > 0 && (
+                <div className="plant-result-card">
+                  <div className="result-header">
+                    <div className="plant-info">
+                      <h3 className="plant-name">{result.suggestions[0].plant_name}</h3>
+                      <p className="scientific-name">{result.suggestions[0].scientific_name}</p>
+                    </div>
+                    <div className="confidence-badge">
+                      <span className="confidence-label">Confidence</span>
+                      <span className="confidence-value">{Math.round(result.suggestions[0].probability * 100)}%</span>
+                    </div>
+                  </div>
+                  
                   {result.suggestions[0].plant_details && (
-                    <div className="plant-details">
+                    <div className="plant-details-wrapper">
                       {renderPlantDetails(result.suggestions[0].plant_details)}
                     </div>
                   )}
                 </div>
               )}
+              
               {result.suggestions && result.suggestions.length > 0 && result.suggestions[0].plant_details?.gbif_id && (
-                <div className="distribution-section">
+                <div className="map-section">
                   <PlantDistributionMap
                     plantName={result.suggestions[0].plant_name}
                     scientificName={result.suggestions[0].scientific_name}
