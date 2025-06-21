@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
-import html2pdf from 'html2pdf.js';
 import Camera from '../components/Camera';
 import PlantDistributionMap from '../components/PlantDistributionMap';
 import '../styles/Identify.css';
@@ -384,11 +383,15 @@ const Identify = () => {
     }
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     if (!result?.suggestions?.[0]) return;
 
-    const plantData = result.suggestions[0];
-    const mergedDetails = { ...plantData.plant_details, ...additionalDetails };
+    try {
+      // Dynamic import for html2pdf
+      const html2pdf = (await import('html2pdf.js')).default;
+      
+      const plantData = result.suggestions[0];
+      const mergedDetails = { ...plantData.plant_details, ...additionalDetails };
 
     // Add location and climate data
     if (locationData) {
@@ -477,15 +480,19 @@ const Identify = () => {
       }
     };
 
-    html2pdf().set(options).from(pdfElement).save().then(() => {
-      // Remove temporary element
-      document.body.removeChild(pdfElement);
-      setShareDropdownOpen(false);
-    }).catch(error => {
-      console.error('Error generating PDF:', error);
-      document.body.removeChild(pdfElement);
-      alert('Error generating PDF. Please try again.');
-    });
+      html2pdf().set(options).from(pdfElement).save().then(() => {
+        // Remove temporary element
+        document.body.removeChild(pdfElement);
+        setShareDropdownOpen(false);
+      }).catch(error => {
+        console.error('Error generating PDF:', error);
+        document.body.removeChild(pdfElement);
+        alert('Error generating PDF. Please try again.');
+      });
+    } catch (error) {
+      console.error('Error loading html2pdf:', error);
+      alert('Error loading PDF generator. Please try again.');
+    }
   };
 
   const formatValue = (value) => {
