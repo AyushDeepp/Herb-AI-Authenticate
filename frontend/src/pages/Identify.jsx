@@ -386,6 +386,12 @@ const Identify = () => {
   const handleDownloadPDF = async () => {
     if (!result?.suggestions?.[0]) return;
 
+    // Temporarily disable PDF functionality to fix build issue
+    alert('PDF download feature is temporarily disabled. Please use the copy text feature instead.');
+    setShareDropdownOpen(false);
+    return;
+
+    /* Commented out until build issue is resolved
     try {
       // Dynamic import for html2pdf
       const html2pdf = (await import('html2pdf.js')).default;
@@ -493,6 +499,7 @@ const Identify = () => {
       console.error('Error loading html2pdf:', error);
       alert('Error loading PDF generator. Please try again.');
     }
+    */
   };
 
   const formatValue = (value) => {
